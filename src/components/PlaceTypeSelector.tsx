@@ -2,14 +2,14 @@
 import React from 'react';
 import { useMap } from '@/context/MapContext';
 import { Button } from '@/components/ui/button';
-import { Home, Building, Building2, Trees, School, MapPin } from 'lucide-react';
+import { Home, Building, School, MapPin } from 'lucide-react';
 
 export const PlaceTypeSelector: React.FC = () => {
   const { startAddingPlace } = useMap();
   
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Button
           variant="outline"
           className="flex flex-col h-20 items-center justify-center"
@@ -31,37 +31,19 @@ export const PlaceTypeSelector: React.FC = () => {
         <Button
           variant="outline"
           className="flex flex-col h-20 items-center justify-center"
-          onClick={() => startAddingPlace('industrial')}
-        >
-          <Building2 className="mb-1" size={20} />
-          <span className="text-xs">Industrial</span>
-        </Button>
-        
-        <Button
-          variant="outline"
-          className="flex flex-col h-20 items-center justify-center"
-          onClick={() => startAddingPlace('park')}
-        >
-          <Trees className="mb-1" size={20} />
-          <span className="text-xs">Park</span>
-        </Button>
-        
-        <Button
-          variant="outline"
-          className="flex flex-col h-20 items-center justify-center"
-          onClick={() => startAddingPlace('hospital')}
+          onClick={() => startAddingPlace('public')}
         >
           <MapPin className="mb-1" size={20} />
-          <span className="text-xs">Hospital</span>
+          <span className="text-xs">Public</span>
         </Button>
         
         <Button
           variant="outline"
           className="flex flex-col h-20 items-center justify-center"
-          onClick={() => startAddingPlace('school')}
+          onClick={() => startAddingPlace('utility')}
         >
           <School className="mb-1" size={20} />
-          <span className="text-xs">School</span>
+          <span className="text-xs">Utility</span>
         </Button>
       </div>
     </div>

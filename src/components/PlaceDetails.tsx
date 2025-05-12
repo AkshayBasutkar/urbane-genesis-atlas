@@ -63,12 +63,20 @@ export const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onDelete }) =
             <SelectContent>
               <SelectItem value="residential">Residential</SelectItem>
               <SelectItem value="commercial">Commercial</SelectItem>
-              <SelectItem value="industrial">Industrial</SelectItem>
-              <SelectItem value="park">Park</SelectItem>
-              <SelectItem value="hospital">Hospital</SelectItem>
-              <SelectItem value="school">School</SelectItem>
+              <SelectItem value="public">Public</SelectItem>
+              <SelectItem value="utility">Utility</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="address">Address</Label>
+          <Input 
+            id="address" 
+            name="address"
+            value={editedPlace.address} 
+            onChange={handleChange}
+          />
         </div>
         
         <div className="space-y-2">
@@ -80,33 +88,6 @@ export const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onDelete }) =
             onChange={handleChange}
             rows={3} 
           />
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-2">
-            <Label htmlFor="width">Width</Label>
-            <Input 
-              id="width" 
-              name="width"
-              type="number" 
-              value={editedPlace.width} 
-              onChange={(e) => setEditedPlace(prev => ({ 
-                ...prev, width: parseInt(e.target.value) 
-              }))} 
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="height">Height</Label>
-            <Input 
-              id="height" 
-              name="height"
-              type="number" 
-              value={editedPlace.height} 
-              onChange={(e) => setEditedPlace(prev => ({ 
-                ...prev, height: parseInt(e.target.value) 
-              }))} 
-            />
-          </div>
         </div>
         
         <div className="grid grid-cols-2 gap-2">

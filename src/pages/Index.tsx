@@ -9,8 +9,8 @@ const Index = () => {
     <MapProvider>
       <div className="min-h-screen flex flex-col">
         <header className="bg-white border-b p-4">
-          <h1 className="text-2xl font-bold">City Map Simulation</h1>
-          <p className="text-gray-500">Interactive city planning and pathfinding</p>
+          <h1 className="text-2xl font-bold">Interactive Scrollable City Map</h1>
+          <p className="text-gray-500">25x25 grid city map with places and lanes</p>
         </header>
         
         <main className="flex-1 flex overflow-hidden">
