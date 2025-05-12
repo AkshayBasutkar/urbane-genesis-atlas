@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -97,5 +98,35 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .road {
+    @apply bg-road border border-road-border;
+  }
+  
+  .residential {
+    @apply bg-residential;
+  }
+  
+  .commercial {
+    @apply bg-commercial;
+  }
+  
+  .industrial {
+    @apply bg-industrial;
+  }
+  
+  .park {
+    @apply bg-park;
+  }
+  
+  .hospital {
+    @apply bg-hospital;
+  }
+  
+  .school {
+    @apply bg-school;
   }
 }

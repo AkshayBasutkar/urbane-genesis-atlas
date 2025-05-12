@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Map specific colors
+				road: '#94a3b8',
+				'road-border': '#64748b',
+				residential: '#fef3c7',
+				commercial: '#dbeafe',
+				industrial: '#f3e8ff',
+				park: '#dcfce7',
+				water: '#bae6fd',
+				hospital: '#fee2e2',
+				school: '#fef9c3',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
