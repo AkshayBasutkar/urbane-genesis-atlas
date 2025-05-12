@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Road } from '@/data/mapData';
-import { Plus, Flag, Road as RoadIcon } from 'lucide-react';
+import { Plus, Flag, Route as RouteIcon } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const { 
@@ -175,7 +175,7 @@ export const Sidebar: React.FC = () => {
             Mark Places
           </Button>
           <Button variant="outline" size="sm">
-            <RoadIcon size={16} className="mr-2" />
+            <RouteIcon size={16} className="mr-2" />
             View Routes
           </Button>
         </div>

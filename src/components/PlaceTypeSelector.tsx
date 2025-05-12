@@ -2,7 +2,7 @@
 import React from 'react';
 import { useMap } from '@/context/MapContext';
 import { Button } from '@/components/ui/button';
-import { Home, Building, Building2, Tree, School, MapPin } from 'lucide-react';
+import { Home, Building, Building2, Trees, School, MapPin } from 'lucide-react';
 
 export const PlaceTypeSelector: React.FC = () => {
   const { startAddingPlace } = useMap();
@@ -42,7 +42,7 @@ export const PlaceTypeSelector: React.FC = () => {
           className="flex flex-col h-20 items-center justify-center"
           onClick={() => startAddingPlace('park')}
         >
-          <Tree className="mb-1" size={20} />
+          <Trees className="mb-1" size={20} />
           <span className="text-xs">Park</span>
         </Button>
         
