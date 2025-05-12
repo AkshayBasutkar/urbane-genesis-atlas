@@ -2,7 +2,7 @@
 import React from 'react';
 import { Place } from '@/data/mapData';
 import { useMap } from '@/context/MapContext';
-import { Building, Home, School, Tree, Building2, MapPin } from 'lucide-react';
+import { Building, Home, School, Trees, Building2, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MapPlaceProps {
@@ -23,7 +23,7 @@ export const MapPlace: React.FC<MapPlaceProps> = ({ place, isSelected }) => {
       case 'industrial':
         return <Building2 size={16} />;
       case 'park':
-        return <Tree size={16} />;
+        return <Trees size={16} />;
       case 'hospital':
         return <MapPin size={16} />;
       case 'school':
