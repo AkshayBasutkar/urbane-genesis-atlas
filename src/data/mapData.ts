@@ -1,4 +1,3 @@
-
 export type PlaceType = 
   'residential' | 
   'commercial' | 
@@ -13,6 +12,21 @@ export interface Place {
   address: string;
   x: number;
   y: number;
+}
+
+export interface Road {
+  id: string;
+  name: string;
+  start: {
+    x: number;
+    y: number;
+  };
+  end: {
+    x: number;
+    y: number;
+  };
+  width: number;
+  cost: number;
 }
 
 export interface Lane {
@@ -37,6 +51,7 @@ export interface CityMap {
   height: number;
   blocks: Block[][];
   places: Place[];
+  roads: Road[];
 }
 
 // Helper function to generate a random number of lanes (2-4) for each block
@@ -145,5 +160,6 @@ export const initialCityMap: CityMap = {
       x: 18,
       y: 18
     }
-  ]
+  ],
+  roads: [],
 };
