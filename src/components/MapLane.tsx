@@ -13,16 +13,19 @@ interface MapLaneProps {
 
 export const MapLane: React.FC<MapLaneProps> = ({ lane, blockX, blockY, blockSize, onClick }) => {
   // Calculate the start and end points of the lane in actual pixel coordinates
-  const startX = blockX * blockSize + (lane.startPosition.x * blockSize);
-  const startY = blockY * blockSize + (lane.startPosition.y * blockSize);
-  const endX = blockX * blockSize + (lane.endPosition.x * blockSize);
-  const endY = blockY * blockSize + (lane.endPosition.y * blockSize);
+  const startX = blockX * blockSize + (lane.startX * blockSize);
+  const startY = blockY * blockSize + (lane.startY * blockSize);
+  const endX = blockX * blockSize + (lane.endX * blockSize);
+  const endY = blockY * blockSize + (lane.endY * blockSize);
   
   // Calculate the lane length and angle
   const dx = endX - startX;
   const dy = endY - startY;
   const length = Math.sqrt(dx * dx + dy * dy);
   const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  
+  // Default lane width if not specified
+  const laneWidth = 4;
   
   return (
     <div 
@@ -34,7 +37,7 @@ export const MapLane: React.FC<MapLaneProps> = ({ lane, blockX, blockY, blockSiz
         left: startX,
         top: startY,
         width: length,
-        height: lane.width,
+        height: laneWidth,
         backgroundColor: '#9CA3AF', // Gray for roads
         borderRadius: 2,
         transformOrigin: '0 50%',
