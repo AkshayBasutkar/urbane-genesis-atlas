@@ -1,10 +1,13 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useMap } from '@/context/MapContext';
 import { Place, PlaceType } from '@/data/mapData';
 import { MapPlace } from './MapPlace';
 import { MapLane } from './MapLane';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Plus, Minus, Menu } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { MapControls } from './MapControls';
 
 interface CityMapProps {
   className?: string;
@@ -57,6 +60,24 @@ export const CityMap: React.FC<CityMapProps> = ({ className }) => {
     e.preventDefault();
     const delta = e.deltaY * -0.01;
     const newScale = Math.min(Math.max(0.5, scale + delta), 2);
+    
+    // Keep the point under the mouse in the same position after scaling
+    if (mapContainerRef.current) {
+      const rect = mapContainerRef.current.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      // Calculate the point in the map coordinate system
+      const mapPointX = (mouseX - position.x) / scale;
+      const mapPointY = (mouseY - position.y) / scale;
+      
+      // Calculate the new position
+      const newX = mouseX - mapPointX * newScale;
+      const newY = mouseY - mapPointY * newScale;
+      
+      setPosition({ x: newX, y: newY });
+    }
+    
     setScale(newScale);
   };
   
@@ -149,7 +170,6 @@ export const CityMap: React.FC<CityMapProps> = ({ className }) => {
   const mapStyle: React.CSSProperties = {
     width: `${mapWidth}px`,
     height: `${mapHeight}px`,
-    backgroundColor: '#f0f0f0', // Light gray background
     position: 'relative',
     transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
     transformOrigin: '0 0',
@@ -171,12 +191,32 @@ export const CityMap: React.FC<CityMapProps> = ({ className }) => {
         className="map-background" 
         style={mapStyle}
       >
+        {/* Map background with color */}
+        <div className="absolute inset-0 bg-slate-100"></div>
+        
         {/* Render grid lines for reference */}
         <div className="absolute inset-0" style={{ 
           backgroundSize: `${BLOCK_SIZE}px ${BLOCK_SIZE}px`,
-          backgroundImage: 'linear-gradient(to right, #ccc 1px, transparent 1px), linear-gradient(to bottom, #ccc 1px, transparent 1px)',
-          opacity: 0.5
+          backgroundImage: 'linear-gradient(to right, #ccc 1px, transparent 1px), linear-gradient(to bottom, #ccc 1px, transparent 1px)'
         }}></div>
+        
+        {/* Render colored city blocks */}
+        {Array.from({ length: GRID_SIZE }).map((_, rowIndex) => 
+          Array.from({ length: GRID_SIZE }).map((_, colIndex) => (
+            <div 
+              key={`block-${rowIndex}-${colIndex}`} 
+              className="absolute"
+              style={{
+                left: colIndex * BLOCK_SIZE,
+                top: rowIndex * BLOCK_SIZE,
+                width: BLOCK_SIZE,
+                height: BLOCK_SIZE,
+                backgroundColor: (rowIndex + colIndex) % 2 === 0 ? '#f8fafc' : '#f1f5f9',
+                border: '1px solid #e2e8f0'
+              }}
+            />
+          ))
+        )}
         
         {/* Render lanes */}
         {cityMap.blocks.map((row, rowIndex) => 
@@ -203,25 +243,45 @@ export const CityMap: React.FC<CityMapProps> = ({ className }) => {
             blockSize={BLOCK_SIZE}
           />
         ))}
+        
+        {/* Render map boundaries (walls) */}
+        <div className="absolute top-0 left-0 right-0 h-2 bg-gray-800"></div> {/* Top wall */}
+        <div className="absolute bottom-0 left-0 right-0 h-2 bg-gray-800"></div> {/* Bottom wall */}
+        <div className="absolute top-0 left-0 bottom-0 w-2 bg-gray-800"></div> {/* Left wall */}
+        <div className="absolute top-0 right-0 bottom-0 w-2 bg-gray-800"></div> {/* Right wall */}
       </div>
       
-      {/* Zoom controls */}
-      <div className="absolute bottom-4 right-4 bg-white p-2 rounded-md border border-gray-300 shadow-md">
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => setScale(prev => Math.min(prev + 0.1, 2))}
-            className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200"
-          >
-            +
-          </button>
-          <span className="text-sm font-medium">{Math.round(scale * 100)}%</span>
-          <button 
-            onClick={() => setScale(prev => Math.max(prev - 0.1, 0.5))}
-            className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200"
-          >
-            -
-          </button>
+      {/* Floating Controls */}
+      <div className="absolute bottom-4 right-4 space-y-2">
+        <div className="bg-white p-2 rounded-md border border-gray-300 shadow-md">
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setScale(prev => Math.min(prev + 0.1, 2))}
+              className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200"
+            >
+              <Plus size={18} />
+            </button>
+            <span className="text-sm font-medium">{Math.round(scale * 100)}%</span>
+            <button 
+              onClick={() => setScale(prev => Math.max(prev - 0.1, 0.5))}
+              className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200"
+            >
+              <Minus size={18} />
+            </button>
+          </div>
         </div>
+        
+        {/* Collapsible Menu Trigger */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="rounded-full bg-white shadow-md">
+              <Menu />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right">
+            <MapControls />
+          </SheetContent>
+        </Sheet>
       </div>
       
       {/* Lane Cost Modal */}

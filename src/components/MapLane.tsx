@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Lane } from '@/data/mapData';
+import { cn } from '@/lib/utils';
 
 interface MapLaneProps {
   lane: Lane;
@@ -11,42 +12,48 @@ interface MapLaneProps {
 }
 
 export const MapLane: React.FC<MapLaneProps> = ({ lane, blockX, blockY, blockSize, onClick }) => {
-  // Calculate the actual pixel coordinates
-  const startX = (blockX + lane.startX) * blockSize;
-  const startY = (blockY + lane.startY) * blockSize;
-  const endX = (blockX + lane.endX) * blockSize;
-  const endY = (blockY + lane.endY) * blockSize;
+  // Calculate the start and end points of the lane in actual pixel coordinates
+  const startX = blockX * blockSize + (lane.startPosition.x * blockSize);
+  const startY = blockY * blockSize + (lane.startPosition.y * blockSize);
+  const endX = blockX * blockSize + (lane.endPosition.x * blockSize);
+  const endY = blockY * blockSize + (lane.endPosition.y * blockSize);
   
-  // Calculate the length and angle of the lane
+  // Calculate the lane length and angle
   const dx = endX - startX;
   const dy = endY - startY;
   const length = Math.sqrt(dx * dx + dy * dy);
   const angle = Math.atan2(dy, dx) * (180 / Math.PI);
   
   return (
-    <div
-      className="absolute lane cursor-pointer hover:bg-blue-300 transition-colors duration-200"
+    <div 
+      className={cn(
+        "absolute cursor-pointer hover:opacity-80 transition-opacity duration-200",
+        "flex items-center justify-center"
+      )}
       style={{
         left: startX,
         top: startY,
         width: length,
-        height: 6,
+        height: lane.width,
+        backgroundColor: '#9CA3AF', // Gray for roads
+        borderRadius: 2,
         transformOrigin: '0 50%',
         transform: `rotate(${angle}deg)`,
-        backgroundColor: '#666',
-        zIndex: 5
+        boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
       }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
+      onClick={onClick}
     >
-      <span 
-        className="absolute top-[-16px] left-1/2 transform -translate-x-1/2 bg-white px-1 text-xs rounded shadow"
-        style={{ whiteSpace: 'nowrap' }}
+      <div 
+        className="absolute inset-y-0 w-full flex items-center justify-center"
+        style={{ transform: `rotate(${-angle}deg)` }}
       >
-        Cost: {lane.cost}
-      </span>
+        <span 
+          className="px-1 py-0.5 text-[7px] font-semibold bg-white bg-opacity-80 rounded-sm text-gray-700 whitespace-nowrap"
+          style={{ opacity: length > 20 ? 1 : 0 }}
+        >
+          {lane.cost}
+        </span>
+      </div>
     </div>
   );
 };

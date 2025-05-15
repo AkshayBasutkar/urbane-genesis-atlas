@@ -60,6 +60,9 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     setIsAddingPlace(false);
     toast.success(`Added new ${place.type}: ${place.name}`);
+    
+    // Select the newly added place
+    selectPlace(newPlace as Place);
   };
 
   const updatePlace = (place: Place) => {
@@ -67,6 +70,12 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...prev,
       places: prev.places.map(p => p.id === place.id ? place : p)
     }));
+    
+    // Update the selected place if it's the one being edited
+    if (selectedPlace?.id === place.id) {
+      setSelectedPlace(place);
+    }
+    
     toast.success(`Updated ${place.name}`);
   };
 
@@ -117,6 +126,12 @@ export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Find the block and filter out the lane to delete
       const block = newBlocks[blockY][blockX];
       const updatedLanes = block.lanes.filter(lane => lane.id !== laneId);
+      
+      // Make sure each block has at least one lane for connectivity
+      if (updatedLanes.length === 0) {
+        toast.error("Cannot delete the last lane in a block");
+        return prev;
+      }
       
       // Update the block with the remaining lanes
       newBlocks[blockY][blockX] = { ...block, lanes: updatedLanes };
