@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useMap } from '@/context/MapContext';
-import { Place, PlaceType } from '@/data/mapData';
+import { Place } from '@/data/mapData';
 import { MapPlace } from './MapPlace';
 import { MapLane } from './MapLane';
 import { cn } from '@/lib/utils';
