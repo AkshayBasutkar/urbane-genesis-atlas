@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useMap } from '@/context/MapContext';
 import { Place } from '@/data/mapData';
@@ -112,12 +113,18 @@ export const CityMap: React.FC<CityMapProps> = ({
   const handleMouseUp = () => {
     setIsDragging(false);
   };
+  
+  // Simplified background click handler to improve place selection
   const handleBackgroundClick = (e: React.MouseEvent) => {
-    // Only handle if we're directly clicking the map background (not a place or lane)
-    if ((e.target as HTMLDivElement).classList.contains('map-background')) {
+    // Check if we're directly clicking the map background or a grid cell
+    if ((e.target as HTMLDivElement).classList.contains('map-background') || 
+        (e.target as HTMLDivElement).classList.contains('grid-cell')) {
+      
       if (isAddingPlace) {
         // Calculate position based on click and current transform
-        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+        const rect = mapContainerRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        
         const x = Math.floor((e.clientX - rect.left - position.x) / (BLOCK_SIZE * scale));
         const y = Math.floor((e.clientY - rect.top - position.y) / (BLOCK_SIZE * scale));
 
@@ -141,6 +148,7 @@ export const CityMap: React.FC<CityMapProps> = ({
       }
     }
   };
+  
   const handleLaneClick = (blockX: number, blockY: number, laneId: string, cost: number) => {
     setSelectedLane({
       blockX,
@@ -182,19 +190,22 @@ export const CityMap: React.FC<CityMapProps> = ({
         backgroundImage: 'linear-gradient(to right, #ccc 1px, transparent 1px), linear-gradient(to bottom, #ccc 1px, transparent 1px)'
       }}></div>
         
-        {/* Render colored city blocks */}
+        {/* Render colored city blocks with grid-cell class for better click handling */}
         {Array.from({
         length: GRID_SIZE
       }).map((_, rowIndex) => Array.from({
         length: GRID_SIZE
-      }).map((_, colIndex) => <div key={`block-${rowIndex}-${colIndex}`} style={{
-        left: colIndex * BLOCK_SIZE,
-        top: rowIndex * BLOCK_SIZE,
-        width: BLOCK_SIZE,
-        height: BLOCK_SIZE,
-        backgroundColor: (rowIndex + colIndex) % 2 === 0 ? '#f8fafc' : '#f1f5f9',
-        border: '1px solid #e2e8f0'
-      }} className="fit" />))}
+      }).map((_, colIndex) => <div key={`block-${rowIndex}-${colIndex}`} 
+        className="grid-cell"
+        style={{
+          position: 'absolute',
+          left: colIndex * BLOCK_SIZE,
+          top: rowIndex * BLOCK_SIZE,
+          width: BLOCK_SIZE,
+          height: BLOCK_SIZE,
+          backgroundColor: (rowIndex + colIndex) % 2 === 0 ? '#f8fafc' : '#f1f5f9',
+          border: '1px solid #e2e8f0'
+        }} />))}
         
         {/* Render lanes */}
         {cityMap.blocks.map((row, rowIndex) => row.map((block, colIndex) => block.lanes.map(lane => <MapLane key={lane.id} lane={lane} blockX={colIndex} blockY={rowIndex} blockSize={BLOCK_SIZE} onClick={() => handleLaneClick(colIndex, rowIndex, lane.id, lane.cost)} />)))}
@@ -202,11 +213,11 @@ export const CityMap: React.FC<CityMapProps> = ({
         {/* Render places */}
         {cityMap.places.map(place => <MapPlace key={place.id} place={place} isSelected={selectedPlace?.id === place.id} blockSize={BLOCK_SIZE} />)}
         
-        {/* Render map boundaries (walls) */}
-        <div className="absolute top-0 left-0 right-0 h-2 bg-gray-800"></div> {/* Top wall */}
-        <div className="absolute bottom-0 left-0 right-0 h-2 bg-gray-800"></div> {/* Bottom wall */}
-        <div className="absolute top-0 left-0 bottom-0 w-2 bg-gray-800"></div> {/* Left wall */}
-        <div className="absolute top-0 right-0 bottom-0 w-2 bg-gray-800"></div> {/* Right wall */}
+        {/* Render map boundaries (walls) - Make them cover the entire perimeter */}
+        <div className="absolute top-0 left-0 right-0 h-4 bg-gray-800"></div> {/* Top wall */}
+        <div className="absolute bottom-0 left-0 right-0 h-4 bg-gray-800"></div> {/* Bottom wall */}
+        <div className="absolute top-0 left-0 bottom-0 w-4 bg-gray-800"></div> {/* Left wall */}
+        <div className="absolute top-0 right-0 bottom-0 w-4 bg-gray-800"></div> {/* Right wall */}
       </div>
       
       {/* Floating Controls */}
