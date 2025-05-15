@@ -76,10 +76,7 @@ export const Sidebar: React.FC = () => {
                         className="flex items-center p-2 rounded hover:bg-gray-100 cursor-pointer"
                         onClick={() => {
                           // Select the place to highlight it on the map
-                          useState(() => {
-                            setSearchQuery('');
-                            return null;
-                          });
+                          setSearchQuery('');
                         }}
                       >
                         <MapPin size={16} className="mr-2 flex-shrink-0" />
