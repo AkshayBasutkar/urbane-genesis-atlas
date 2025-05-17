@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useMap } from '@/context/MapContext';
 import { Place } from '@/data/mapData';
@@ -49,6 +50,7 @@ export const CityMap: React.FC<CityMapProps> = ({
     cost: number;
   } | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const [hoverCell, setHoverCell] = useState<{x: number, y: number} | null>(null);
 
   // Calculate total map size
   const mapWidth = GRID_SIZE * BLOCK_SIZE;
@@ -65,6 +67,28 @@ export const CityMap: React.FC<CityMapProps> = ({
       });
     }
   }, []);
+  
+  // Convert screen coordinates to grid coordinates
+  const screenToGridCoordinates = (screenX: number, screenY: number): {x: number, y: number} => {
+    if (!mapContainerRef.current) return {x: -1, y: -1};
+    
+    const rect = mapContainerRef.current.getBoundingClientRect();
+    
+    // Calculate position relative to map container
+    const relativeX = screenX - rect.left;
+    const relativeY = screenY - rect.top;
+    
+    // Account for the map's transform (position and scale)
+    const mapX = (relativeX - position.x) / scale;
+    const mapY = (relativeY - position.y) / scale;
+    
+    // Convert to grid coordinates
+    const gridX = Math.floor(mapX / BLOCK_SIZE);
+    const gridY = Math.floor(mapY / BLOCK_SIZE);
+    
+    return { x: gridX, y: gridY };
+  };
+  
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY * -0.01;
@@ -90,6 +114,7 @@ export const CityMap: React.FC<CityMapProps> = ({
     }
     setScale(newScale);
   };
+  
   const handleMouseDown = (e: React.MouseEvent) => {
     // If we're adding a new place, don't start dragging
     if (isAddingPlace) return;
@@ -102,6 +127,7 @@ export const CityMap: React.FC<CityMapProps> = ({
       });
     }
   };
+  
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isDragging) {
       setPosition({
@@ -109,48 +135,66 @@ export const CityMap: React.FC<CityMapProps> = ({
         y: e.clientY - dragStart.y
       });
     }
+    
+    // Update hover cell for visual feedback when adding places
+    if (isAddingPlace) {
+      const gridCoords = screenToGridCoordinates(e.clientX, e.clientY);
+      
+      // Only update if within valid grid range
+      if (gridCoords.x >= 0 && gridCoords.x < GRID_SIZE && 
+          gridCoords.y >= 0 && gridCoords.y < GRID_SIZE) {
+        setHoverCell(gridCoords);
+      } else {
+        setHoverCell(null);
+      }
+    }
   };
+  
   const handleMouseUp = () => {
     setIsDragging(false);
   };
   
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+    setHoverCell(null);
+  };
+  
   // Handle clicks anywhere on the map for adding places
   const handleMapClick = (e: React.MouseEvent) => {
-    if (!isAddingPlace) {
-      // If not adding a place, check if we clicked on the background
-      const target = e.target as HTMLElement;
-      if (target.classList.contains('map-background') || 
-          target.classList.contains('grid-cell')) {
-        clearSelection();
-        setSelectedLane(null);
-      }
+    // Get grid coordinates regardless of what was clicked
+    const gridCoords = screenToGridCoordinates(e.clientX, e.clientY);
+    
+    // Check if clicked on a background element to clear selection
+    const target = e.target as HTMLElement;
+    const isBackgroundClick = target.classList.contains('map-background') || 
+                              target.classList.contains('grid-cell');
+    
+    // If not adding a place and clicked on background, clear selection
+    if (!isAddingPlace && isBackgroundClick) {
+      clearSelection();
+      setSelectedLane(null);
       return;
     }
     
-    // If we're adding a place, calculate position regardless of target
-    const rect = mapContainerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    
-    // Get mouse position relative to the map container
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    
-    // Convert to grid coordinates considering current position and scale
-    const gridX = Math.floor((mouseX - position.x) / (BLOCK_SIZE * scale));
-    const gridY = Math.floor((mouseY - position.y) / (BLOCK_SIZE * scale));
-    
-    // Ensure coordinates are within the grid
-    if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
-      // Create new place
-      const newPlace: Omit<Place, 'id'> = {
-        name: `New ${newPlaceType}`,
-        type: newPlaceType,
-        description: `A new ${newPlaceType}`,
-        address: `Block ${gridX},${gridY}`,
-        x: gridX,
-        y: gridY
-      };
-      addPlace(newPlace);
+    // If we're adding a place, check coordinates are valid
+    if (isAddingPlace) {
+      // Ensure coordinates are within the grid
+      if (gridCoords.x >= 0 && gridCoords.x < GRID_SIZE && 
+          gridCoords.y >= 0 && gridCoords.y < GRID_SIZE) {
+        
+        console.log("Adding place at grid coordinates:", gridCoords.x, gridCoords.y);
+        
+        // Create new place
+        const newPlace: Omit<Place, 'id'> = {
+          name: `New ${newPlaceType}`,
+          type: newPlaceType,
+          description: `A new ${newPlaceType}`,
+          address: `Block ${gridCoords.x},${gridCoords.y}`,
+          x: gridCoords.x,
+          y: gridCoords.y
+        };
+        addPlace(newPlace);
+      }
     }
   };
   
@@ -163,12 +207,14 @@ export const CityMap: React.FC<CityMapProps> = ({
     });
     setShowLaneCostModal(true);
   };
+  
   const handleUpdateLaneCost = () => {
     if (selectedLane) {
       updateLaneCost(selectedLane.blockX, selectedLane.blockY, selectedLane.laneId, selectedLane.cost);
       setShowLaneCostModal(false);
     }
   };
+  
   const handleDeleteLane = () => {
     if (selectedLane) {
       deleteLane(selectedLane.blockX, selectedLane.blockY, selectedLane.laneId);
@@ -189,15 +235,19 @@ export const CityMap: React.FC<CityMapProps> = ({
   return (
     <div 
       ref={mapContainerRef} 
-      className={cn("relative overflow-hidden border border-gray-300 rounded-lg", className)} 
+      className={cn("relative overflow-hidden border border-gray-300 rounded-lg w-full h-full", className)} 
       onWheel={handleWheel} 
       onMouseDown={handleMouseDown} 
       onMouseMove={handleMouseMove} 
       onMouseUp={handleMouseUp} 
-      onMouseLeave={handleMouseUp} 
+      onMouseLeave={handleMouseLeave} 
       onClick={handleMapClick}
     >
-      <div className="map-background absolute inset-0 w-full h-full" style={mapStyle}>
+      {/* Clickable background overlay that covers entire container */}
+      <div className="map-background absolute inset-0 z-0" />
+      
+      {/* The actual map with grid and places */}
+      <div className="absolute inset-0" style={mapStyle}>
         {/* Map background with color */}
         <div className="absolute inset-0 bg-slate-100"></div>
         
@@ -219,8 +269,14 @@ export const CityMap: React.FC<CityMapProps> = ({
                 top: rowIndex * BLOCK_SIZE,
                 width: BLOCK_SIZE,
                 height: BLOCK_SIZE,
-                backgroundColor: (rowIndex + colIndex) % 2 === 0 ? '#f8fafc' : '#f1f5f9',
-                border: '1px solid #e2e8f0'
+                backgroundColor: 
+                  hoverCell && hoverCell.x === colIndex && hoverCell.y === rowIndex && isAddingPlace
+                    ? 'rgba(59, 130, 246, 0.2)' // Highlight hovered cell when adding place
+                    : (rowIndex + colIndex) % 2 === 0 ? '#f8fafc' : '#f1f5f9',
+                border: hoverCell && hoverCell.x === colIndex && hoverCell.y === rowIndex && isAddingPlace 
+                  ? '2px dashed #3b82f6' // Highlight border for visual feedback
+                  : '1px solid #e2e8f0',
+                zIndex: 1
               }} 
             />
           ))
@@ -252,15 +308,15 @@ export const CityMap: React.FC<CityMapProps> = ({
           />
         )}
         
-        {/* Render map boundaries (walls) - Make them thicker and cover the entire perimeter */}
-        <div className="absolute top-0 left-0 right-0 h-6 bg-gray-800"></div> {/* Top wall */}
-        <div className="absolute bottom-0 left-0 right-0 h-6 bg-gray-800"></div> {/* Bottom wall */}
-        <div className="absolute top-0 left-0 bottom-0 w-6 bg-gray-800"></div> {/* Left wall */}
-        <div className="absolute top-0 right-0 bottom-0 w-6 bg-gray-800"></div> {/* Right wall */}
+        {/* Render map boundaries (walls) with proper z-index */}
+        <div className="absolute top-0 left-0 right-0 h-6 bg-gray-800 z-5"></div> {/* Top wall */}
+        <div className="absolute bottom-0 left-0 right-0 h-6 bg-gray-800 z-5"></div> {/* Bottom wall */}
+        <div className="absolute top-0 left-0 bottom-0 w-6 bg-gray-800 z-5"></div> {/* Left wall */}
+        <div className="absolute top-0 right-0 bottom-0 w-6 bg-gray-800 z-5"></div> {/* Right wall */}
       </div>
       
       {/* Floating Controls */}
-      <div className="absolute bottom-4 right-4 space-y-2">
+      <div className="absolute bottom-4 right-4 space-y-2 z-20">
         <div className="bg-white p-2 rounded-md border border-gray-300 shadow-md">
           <div className="flex items-center gap-2">
             <button onClick={() => setScale(prev => Math.min(prev + 0.1, 2))} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200">
@@ -288,7 +344,7 @@ export const CityMap: React.FC<CityMapProps> = ({
       
       {/* Lane Cost Modal */}
       {showLaneCostModal && selectedLane && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-md shadow-lg w-80">
             <h2 className="text-lg font-bold mb-4">Lane Settings</h2>
             <div className="space-y-4">
