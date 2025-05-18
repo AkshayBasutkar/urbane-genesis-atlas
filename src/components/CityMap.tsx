@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useMap } from '@/context/MapContext';
 import { Place } from '@/data/mapData';
@@ -16,7 +15,7 @@ interface CityMapProps {
 
 // Constants for the grid
 const BLOCK_SIZE = 40; // Size of each block in pixels
-const GRID_SIZE = 25; // 25x25 grid
+const GRID_SIZE = 100; // Changed from 25 to 100
 
 export const CityMap: React.FC<CityMapProps> = ({
   className
@@ -32,7 +31,7 @@ export const CityMap: React.FC<CityMapProps> = ({
     updateLaneCost,
     deleteLane
   } = useMap();
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(0.5); // Start with a smaller scale to fit the larger map
   const [position, setPosition] = useState({
     x: 0,
     y: 0
@@ -66,10 +65,11 @@ export const CityMap: React.FC<CityMapProps> = ({
       });
     }
   }, []);
+  
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY * -0.01;
-    const newScale = Math.min(Math.max(0.5, scale + delta), 2);
+    const newScale = Math.min(Math.max(0.2, scale + delta), 2);
 
     // Keep the point under the mouse in the same position after scaling
     if (mapContainerRef.current) {
@@ -189,37 +189,43 @@ export const CityMap: React.FC<CityMapProps> = ({
   
   // Generate row numbers (along the left side)
   const renderRowNumbers = () => {
+    // For large grids, only render every 5th row number to avoid overcrowding
     return Array.from({ length: GRID_SIZE }).map((_, index) => (
-      <div 
-        key={`row-${index}`}
-        className="absolute text-xs font-semibold bg-white/70 px-1 rounded-sm z-10 select-none"
-        style={{
-          left: -24, // Position to the left of the grid
-          top: index * BLOCK_SIZE + BLOCK_SIZE/2 - 8, // Center vertically in each block
-          transform: 'scale(1)',
-          transformOrigin: 'center'
-        }}
-      >
-        {index}
-      </div>
+      index % 5 === 0 ? (
+        <div 
+          key={`row-${index}`}
+          className="absolute text-xs font-semibold bg-white/70 px-1 rounded-sm z-10 select-none"
+          style={{
+            left: -24, // Position to the left of the grid
+            top: index * BLOCK_SIZE + BLOCK_SIZE/2 - 8, // Center vertically in each block
+            transform: 'scale(1)',
+            transformOrigin: 'center'
+          }}
+        >
+          {index}
+        </div>
+      ) : null
     ));
   };
 
   // Generate column numbers (along the top)
   const renderColumnNumbers = () => {
+    // For large grids, only render every 5th column number to avoid overcrowding
     return Array.from({ length: GRID_SIZE }).map((_, index) => (
-      <div 
-        key={`col-${index}`}
-        className="absolute text-xs font-semibold bg-white/70 px-1 rounded-sm z-10 select-none"
-        style={{
-          left: index * BLOCK_SIZE + BLOCK_SIZE/2 - 6, // Center horizontally in each block
-          top: -20, // Position above the grid
-          transform: 'scale(1)',
-          transformOrigin: 'center'
-        }}
-      >
-        {index}
-      </div>
+      index % 5 === 0 ? (
+        <div 
+          key={`col-${index}`}
+          className="absolute text-xs font-semibold bg-white/70 px-1 rounded-sm z-10 select-none"
+          style={{
+            left: index * BLOCK_SIZE + BLOCK_SIZE/2 - 6, // Center horizontally in each block
+            top: -20, // Position above the grid
+            transform: 'scale(1)',
+            transformOrigin: 'center'
+          }}
+        >
+          {index}
+        </div>
+      ) : null
     ));
   };
   
@@ -308,7 +314,7 @@ export const CityMap: React.FC<CityMapProps> = ({
               <Plus size={18} />
             </button>
             <span className="text-sm font-medium">{Math.round(scale * 100)}%</span>
-            <button onClick={() => setScale(prev => Math.max(prev - 0.1, 0.5))} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200">
+            <button onClick={() => setScale(prev => Math.max(prev - 0.1, 0.2))} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200">
               <Minus size={18} />
             </button>
           </div>

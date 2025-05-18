@@ -88,13 +88,16 @@ const generateRandomLanes = (startX: number, startY: number): Lane[] => {
   return lanes;
 };
 
-// Create a 25x25 grid of blocks
+// Define the grid size constant
+const GRID_SIZE = 100; // Changed from 25 to 100
+
+// Create a GRID_SIZE x GRID_SIZE grid of blocks
 const createCityGrid = (): Block[][] => {
   const grid: Block[][] = [];
   
-  for (let y = 0; y < 25; y++) {
+  for (let y = 0; y < GRID_SIZE; y++) {
     const row: Block[] = [];
-    for (let x = 0; x < 25; x++) {
+    for (let x = 0; x < GRID_SIZE; x++) {
       row.push({
         id: `block-${x}-${y}`,
         x: x,
@@ -111,8 +114,8 @@ const createCityGrid = (): Block[][] => {
 // Initial city map data
 export const initialCityMap: CityMap = {
   name: "GridCity",
-  width: 25,
-  height: 25,
+  width: GRID_SIZE,
+  height: GRID_SIZE,
   blocks: createCityGrid(),
   places: [
     {
@@ -121,8 +124,8 @@ export const initialCityMap: CityMap = {
       type: "public",
       description: "The main administrative building of the city",
       address: "1 Main Street",
-      x: 12,
-      y: 12
+      x: 50, // Moved to center of larger grid
+      y: 50  // Moved to center of larger grid
     },
     {
       id: "place-2",
@@ -130,8 +133,8 @@ export const initialCityMap: CityMap = {
       type: "public",
       description: "A beautiful park in the heart of downtown",
       address: "10 Park Avenue",
-      x: 10,
-      y: 10
+      x: 45,
+      y: 45
     },
     {
       id: "place-3",
@@ -139,8 +142,8 @@ export const initialCityMap: CityMap = {
       type: "utility",
       description: "The main hospital serving the city center",
       address: "100 Health Road",
-      x: 8,
-      y: 14
+      x: 42,
+      y: 55
     },
     {
       id: "place-4",
@@ -148,8 +151,8 @@ export const initialCityMap: CityMap = {
       type: "residential",
       description: "A luxury apartment complex",
       address: "25 Sunset Boulevard",
-      x: 15,
-      y: 8
+      x: 60,
+      y: 40
     },
     {
       id: "place-5",
@@ -157,8 +160,8 @@ export const initialCityMap: CityMap = {
       type: "commercial",
       description: "The city's largest shopping center",
       address: "55 Commerce Street",
-      x: 18,
-      y: 18
+      x: 70,
+      y: 70
     }
   ],
   roads: [],
