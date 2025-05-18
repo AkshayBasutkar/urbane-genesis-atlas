@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useMap } from '@/context/MapContext';
 import { Place } from '@/data/mapData';
@@ -186,6 +187,42 @@ export const CityMap: React.FC<CityMapProps> = ({
     cursor: isAddingPlace ? 'crosshair' : isDragging ? 'grabbing' : 'grab'
   };
   
+  // Generate row numbers (along the left side)
+  const renderRowNumbers = () => {
+    return Array.from({ length: GRID_SIZE }).map((_, index) => (
+      <div 
+        key={`row-${index}`}
+        className="absolute text-xs font-semibold bg-white/70 px-1 rounded-sm z-10 select-none"
+        style={{
+          left: -24, // Position to the left of the grid
+          top: index * BLOCK_SIZE + BLOCK_SIZE/2 - 8, // Center vertically in each block
+          transform: 'scale(1)',
+          transformOrigin: 'center'
+        }}
+      >
+        {index}
+      </div>
+    ));
+  };
+
+  // Generate column numbers (along the top)
+  const renderColumnNumbers = () => {
+    return Array.from({ length: GRID_SIZE }).map((_, index) => (
+      <div 
+        key={`col-${index}`}
+        className="absolute text-xs font-semibold bg-white/70 px-1 rounded-sm z-10 select-none"
+        style={{
+          left: index * BLOCK_SIZE + BLOCK_SIZE/2 - 6, // Center horizontally in each block
+          top: -20, // Position above the grid
+          transform: 'scale(1)',
+          transformOrigin: 'center'
+        }}
+      >
+        {index}
+      </div>
+    ));
+  };
+  
   return (
     <div 
       ref={mapContainerRef} 
@@ -225,6 +262,10 @@ export const CityMap: React.FC<CityMapProps> = ({
             />
           ))
         )}
+        
+        {/* Row and Column numbers */}
+        {renderRowNumbers()}
+        {renderColumnNumbers()}
         
         {/* Render lanes */}
         {cityMap.blocks.map((row, rowIndex) => 
