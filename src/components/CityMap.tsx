@@ -15,7 +15,7 @@ interface CityMapProps {
 
 // Constants for the grid
 const BLOCK_SIZE = 40; // Size of each block in pixels
-const GRID_SIZE = 100; // Changed from 25 to 100
+const GRID_SIZE = 100; // 100x100 grid
 
 export const CityMap: React.FC<CityMapProps> = ({
   className
@@ -31,7 +31,7 @@ export const CityMap: React.FC<CityMapProps> = ({
     updateLaneCost,
     deleteLane
   } = useMap();
-  const [scale, setScale] = useState(0.5); // Start with a smaller scale to fit the larger map
+  const [scale, setScale] = useState(0.2); // Start with an even smaller scale for the larger map
   const [position, setPosition] = useState({
     x: 0,
     y: 0
@@ -65,11 +65,11 @@ export const CityMap: React.FC<CityMapProps> = ({
       });
     }
   }, []);
-  
+
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY * -0.01;
-    const newScale = Math.min(Math.max(0.2, scale + delta), 2);
+    const newScale = Math.min(Math.max(0.1, scale + delta), 2);
 
     // Keep the point under the mouse in the same position after scaling
     if (mapContainerRef.current) {
@@ -91,11 +91,10 @@ export const CityMap: React.FC<CityMapProps> = ({
     }
     setScale(newScale);
   };
+
   const handleMouseDown = (e: React.MouseEvent) => {
-    // If we're adding a new place, don't start dragging
     if (isAddingPlace) return;
     if (e.button === 0) {
-      // Left mouse button
       setIsDragging(true);
       setDragStart({
         x: e.clientX - position.x,
@@ -103,6 +102,7 @@ export const CityMap: React.FC<CityMapProps> = ({
       });
     }
   };
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isDragging) {
       setPosition({
@@ -111,14 +111,13 @@ export const CityMap: React.FC<CityMapProps> = ({
       });
     }
   };
+
   const handleMouseUp = () => {
     setIsDragging(false);
   };
   
-  // Handle clicks anywhere on the map for adding places
   const handleMapClick = (e: React.MouseEvent) => {
     if (!isAddingPlace) {
-      // If not adding a place, check if we clicked on the background
       const target = e.target as HTMLElement;
       if (target.classList.contains('map-background') || 
           target.classList.contains('grid-cell')) {
@@ -128,21 +127,16 @@ export const CityMap: React.FC<CityMapProps> = ({
       return;
     }
     
-    // If we're adding a place, calculate position regardless of target
     const rect = mapContainerRef.current?.getBoundingClientRect();
     if (!rect) return;
     
-    // Get mouse position relative to the map container
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
     
-    // Convert to grid coordinates considering current position and scale
     const gridX = Math.floor((mouseX - position.x) / (BLOCK_SIZE * scale));
     const gridY = Math.floor((mouseY - position.y) / (BLOCK_SIZE * scale));
     
-    // Ensure coordinates are within the grid
     if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
-      // Create new place
       const newPlace: Omit<Place, 'id'> = {
         name: `New ${newPlaceType}`,
         type: newPlaceType,
@@ -164,12 +158,14 @@ export const CityMap: React.FC<CityMapProps> = ({
     });
     setShowLaneCostModal(true);
   };
+
   const handleUpdateLaneCost = () => {
     if (selectedLane) {
       updateLaneCost(selectedLane.blockX, selectedLane.blockY, selectedLane.laneId, selectedLane.cost);
       setShowLaneCostModal(false);
     }
   };
+
   const handleDeleteLane = () => {
     if (selectedLane) {
       deleteLane(selectedLane.blockX, selectedLane.blockY, selectedLane.laneId);
@@ -187,17 +183,16 @@ export const CityMap: React.FC<CityMapProps> = ({
     cursor: isAddingPlace ? 'crosshair' : isDragging ? 'grabbing' : 'grab'
   };
   
-  // Generate row numbers (along the left side)
+  // Generate row numbers (along the left side) - show every 10th row for 100x100 grid
   const renderRowNumbers = () => {
-    // For large grids, only render every 5th row number to avoid overcrowding
     return Array.from({ length: GRID_SIZE }).map((_, index) => (
-      index % 5 === 0 ? (
+      index % 10 === 0 ? (
         <div 
           key={`row-${index}`}
           className="absolute text-xs font-semibold bg-white/70 px-1 rounded-sm z-10 select-none"
           style={{
-            left: -24, // Position to the left of the grid
-            top: index * BLOCK_SIZE + BLOCK_SIZE/2 - 8, // Center vertically in each block
+            left: -24,
+            top: index * BLOCK_SIZE + BLOCK_SIZE/2 - 8,
             transform: 'scale(1)',
             transformOrigin: 'center'
           }}
@@ -208,17 +203,16 @@ export const CityMap: React.FC<CityMapProps> = ({
     ));
   };
 
-  // Generate column numbers (along the top)
+  // Generate column numbers (along the top) - show every 10th column for 100x100 grid
   const renderColumnNumbers = () => {
-    // For large grids, only render every 5th column number to avoid overcrowding
     return Array.from({ length: GRID_SIZE }).map((_, index) => (
-      index % 5 === 0 ? (
+      index % 10 === 0 ? (
         <div 
           key={`col-${index}`}
           className="absolute text-xs font-semibold bg-white/70 px-1 rounded-sm z-10 select-none"
           style={{
-            left: index * BLOCK_SIZE + BLOCK_SIZE/2 - 6, // Center horizontally in each block
-            top: -20, // Position above the grid
+            left: index * BLOCK_SIZE + BLOCK_SIZE/2 - 6,
+            top: -20,
             transform: 'scale(1)',
             transformOrigin: 'center'
           }}
@@ -228,6 +222,24 @@ export const CityMap: React.FC<CityMapProps> = ({
       ) : null
     ));
   };
+
+  // Calculate the viewport to only render visible blocks
+  const getVisibleRange = () => {
+    if (!mapContainerRef.current) return { startX: 0, endX: GRID_SIZE, startY: 0, endY: GRID_SIZE };
+    
+    const containerWidth = mapContainerRef.current.clientWidth;
+    const containerHeight = mapContainerRef.current.clientHeight;
+    
+    // Calculate which blocks are visible
+    const startX = Math.max(0, Math.floor(-position.x / (BLOCK_SIZE * scale)));
+    const endX = Math.min(GRID_SIZE, Math.ceil((containerWidth - position.x) / (BLOCK_SIZE * scale)));
+    const startY = Math.max(0, Math.floor(-position.y / (BLOCK_SIZE * scale)));
+    const endY = Math.min(GRID_SIZE, Math.ceil((containerHeight - position.y) / (BLOCK_SIZE * scale)));
+    
+    return { startX, endX, startY, endY };
+  };
+
+  const { startX, endX, startY, endY } = getVisibleRange();
   
   return (
     <div 
@@ -250,33 +262,44 @@ export const CityMap: React.FC<CityMapProps> = ({
           backgroundImage: 'linear-gradient(to right, #ccc 1px, transparent 1px), linear-gradient(to bottom, #ccc 1px, transparent 1px)'
         }}></div>
         
-        {/* Render colored city blocks with grid-cell class for better click handling */}
-        {Array.from({ length: GRID_SIZE }).map((_, rowIndex) => 
-          Array.from({ length: GRID_SIZE }).map((_, colIndex) => (
-            <div 
-              key={`block-${rowIndex}-${colIndex}`} 
-              className="grid-cell"
-              style={{
-                position: 'absolute',
-                left: colIndex * BLOCK_SIZE,
-                top: rowIndex * BLOCK_SIZE,
-                width: BLOCK_SIZE,
-                height: BLOCK_SIZE,
-                backgroundColor: (rowIndex + colIndex) % 2 === 0 ? '#f8fafc' : '#f1f5f9',
-                border: '1px solid #e2e8f0'
-              }} 
-            />
-          ))
-        )}
+        {/* Render only visible colored city blocks */}
+        {Array.from({ length: endY - startY }).map((_, relativeRowIndex) => {
+          const rowIndex = startY + relativeRowIndex;
+          return Array.from({ length: endX - startX }).map((_, relativeColIndex) => {
+            const colIndex = startX + relativeColIndex;
+            return (
+              <div 
+                key={`block-${colIndex}-${rowIndex}`} 
+                className="grid-cell"
+                style={{
+                  position: 'absolute',
+                  left: colIndex * BLOCK_SIZE,
+                  top: rowIndex * BLOCK_SIZE,
+                  width: BLOCK_SIZE,
+                  height: BLOCK_SIZE,
+                  backgroundColor: (rowIndex + colIndex) % 2 === 0 ? '#f8fafc' : '#f1f5f9',
+                  border: '1px solid #e2e8f0'
+                }} 
+              />
+            );
+          });
+        })}
         
         {/* Row and Column numbers */}
         {renderRowNumbers()}
         {renderColumnNumbers()}
         
-        {/* Render lanes */}
-        {cityMap.blocks.map((row, rowIndex) => 
-          row.map((block, colIndex) => 
-            block.lanes.map(lane => 
+        {/* Render lanes only for visible blocks */}
+        {Array.from({ length: endY - startY }).map((_, relativeRowIndex) => {
+          const rowIndex = startY + relativeRowIndex;
+          if (rowIndex >= cityMap.blocks.length) return null;
+          
+          return Array.from({ length: endX - startX }).map((_, relativeColIndex) => {
+            const colIndex = startX + relativeColIndex;
+            if (colIndex >= cityMap.blocks[rowIndex].length) return null;
+            
+            const block = cityMap.blocks[rowIndex][colIndex];
+            return block.lanes.map(lane => 
               <MapLane 
                 key={lane.id} 
                 lane={lane} 
@@ -285,9 +308,9 @@ export const CityMap: React.FC<CityMapProps> = ({
                 blockSize={BLOCK_SIZE} 
                 onClick={() => handleLaneClick(colIndex, rowIndex, lane.id, lane.cost)} 
               />
-            )
-          )
-        )}
+            );
+          });
+        })}
         
         {/* Render places */}
         {cityMap.places.map(place => 
@@ -299,11 +322,11 @@ export const CityMap: React.FC<CityMapProps> = ({
           />
         )}
         
-        {/* Render map boundaries (walls) - Make them thicker and cover the entire perimeter */}
-        <div className="absolute top-0 left-0 right-0 h-6 bg-gray-800"></div> {/* Top wall */}
-        <div className="absolute bottom-0 left-0 right-0 h-6 bg-gray-800"></div> {/* Bottom wall */}
-        <div className="absolute top-0 left-0 bottom-0 w-6 bg-gray-800"></div> {/* Left wall */}
-        <div className="absolute top-0 right-0 bottom-0 w-6 bg-gray-800"></div> {/* Right wall */}
+        {/* Render map boundaries (walls) */}
+        <div className="absolute top-0 left-0 right-0 h-6 bg-gray-800"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-6 bg-gray-800"></div>
+        <div className="absolute top-0 left-0 bottom-0 w-6 bg-gray-800"></div>
+        <div className="absolute top-0 right-0 bottom-0 w-6 bg-gray-800"></div>
       </div>
       
       {/* Floating Controls */}
@@ -314,13 +337,12 @@ export const CityMap: React.FC<CityMapProps> = ({
               <Plus size={18} />
             </button>
             <span className="text-sm font-medium">{Math.round(scale * 100)}%</span>
-            <button onClick={() => setScale(prev => Math.max(prev - 0.1, 0.2))} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200">
+            <button onClick={() => setScale(prev => Math.max(prev - 0.1, 0.1))} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200">
               <Minus size={18} />
             </button>
           </div>
         </div>
         
-        {/* Collapsible Menu Trigger */}
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon" className="rounded-full bg-white shadow-md">
